@@ -80,13 +80,17 @@ def transcribe(audio_path: str | Path, cfg) -> list[Turn]:
     if cfg.diarize and cfg.hf_token:
         try:
             print("  Identifying speakers…")
-            diarize_model = whisperx.DiarizationPipeline(
-                use_auth_token=cfg.hf_token, device=cfg.device
+            # whisperx 3.8+ moved DiarizationPipeline into the `diarize`
+            # submodule and renamed the auth kwarg use_auth_token -> token.
+            from whisperx.diarize import DiarizationPipeline, assign_word_speakers
+
+            diarize_model = DiarizationPipeline(
+                model_name=cfg.diarize_model, token=cfg.hf_token, device=cfg.device
             )
             diarize_segments = diarize_model(
                 audio, min_speakers=cfg.min_speakers, max_speakers=cfg.max_speakers
             )
-            result = whisperx.assign_word_speakers(diarize_segments, result)
+            result = assign_word_speakers(diarize_segments, result)
         except Exception as e:
             print(f"  ! Diarization failed ({e}); continuing without speaker labels.")
     elif cfg.diarize and not cfg.hf_token:

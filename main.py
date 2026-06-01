@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -20,6 +21,22 @@ import config
 
 def _timestamp() -> str:
     return time.strftime("%Y%m%d-%H%M%S")
+
+
+def _stop_after(seconds: int | None) -> "threading.Event | None":
+    """Return a stop_event that fires after `seconds` (None => stop on Enter)."""
+    if not seconds or seconds <= 0:
+        return None
+    ev = threading.Event()
+
+    def _timer() -> None:
+        time.sleep(seconds)
+        print(f"  ⏱ Reached {seconds}s limit — stopping.")
+        ev.set()
+
+    threading.Thread(target=_timer, daemon=True).start()
+    print(f"  Recording for a fixed {seconds}s…")
+    return ev
 
 
 def _process(audio: Path, cfg, out: Path | None) -> Path:
@@ -58,6 +75,7 @@ def cmd_record(args, cfg) -> None:
         sample_rate=cfg.sample_rate,
         capture_mic=cfg.capture_mic,
         capture_system=cfg.capture_system,
+        stop_event=_stop_after(args.duration),
     )
 
 
@@ -79,6 +97,7 @@ def cmd_run(args, cfg) -> None:
         sample_rate=cfg.sample_rate,
         capture_mic=cfg.capture_mic,
         capture_system=cfg.capture_system,
+        stop_event=_stop_after(args.duration),
     )
     print("\n=== Process ===")
     _process(audio, cfg, Path(args.output) if args.output else None)
@@ -91,6 +110,11 @@ def main() -> None:
 
     p_rec = sub.add_parser("record", help="Record a meeting to a WAV")
     p_rec.add_argument("-o", "--output", help="Output WAV path")
+    p_rec.add_argument(
+        "-d", "--duration", type=int, default=None,
+        help="Record for a fixed number of seconds, then stop automatically "
+             "(default: record until you press Enter).",
+    )
     p_rec.set_defaults(func=cmd_record)
 
     p_proc = sub.add_parser("process", help="Transcribe + summarize an audio file")
@@ -100,6 +124,11 @@ def main() -> None:
 
     p_run = sub.add_parser("run", help="Record now, then process when stopped")
     p_run.add_argument("-o", "--output", help="Output minutes .md path")
+    p_run.add_argument(
+        "-d", "--duration", type=int, default=None,
+        help="Record for a fixed number of seconds before processing "
+             "(default: record until you press Enter).",
+    )
     p_run.set_defaults(func=cmd_run)
 
     args = parser.parse_args()

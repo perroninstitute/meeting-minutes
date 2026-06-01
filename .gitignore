@@ -19,6 +19,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# --- Local scratch / diagnostics ---
+_diag*.py
+_dummy*.py
+_smoketest*
+
 # --- OS / editor ---
 .DS_Store
 .idea/

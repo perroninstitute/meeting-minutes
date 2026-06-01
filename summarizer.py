@@ -50,13 +50,17 @@ A short paragraph (3-5 sentences) capturing the purpose and overall outcome.
 - Anything left unresolved.
 
 ---
-Relevant domain terminology (keep these spellings/usages):
+Use this domain terminology with the spellings below wherever it appears. Do
+NOT list, repeat, or output these terms anywhere in your answer — they are
+reference only:
 {glossary}
 ---
 
-Transcript:
+Transcript to summarise:
 {transcript}
-"""
+
+Now output ONLY the meeting minutes in the exact structure above. Do not echo
+the terminology list or the transcript."""
 
 
 def _speakers_in(transcript: str) -> str:
@@ -70,8 +74,20 @@ def _speakers_in(transcript: str) -> str:
     return ", ".join(seen) if seen else "not separated"
 
 
+def _strip_echoed_reference(minutes: str) -> str:
+    """Cut anything the model appends after the minutes (echoed glossary or
+    transcript). The minutes proper never contain these markers, so the first
+    occurrence of one marks where the model started parroting the prompt."""
+    markers = ("\nUse this domain terminology", "\nTranscript to summarise",
+               "\nRelevant domain terminology", "\nTranscript:")
+    cut = min((minutes.find(m) for m in markers if m in minutes), default=-1)
+    return minutes[:cut].rstrip() if cut != -1 else minutes
+
+
 def summarize(transcript: str, cfg, date: str = "") -> str:
-    glossary = cfg.glossary() or "(none provided)"
+    # Cleaned terms only (no "#" comment lines from glossary.txt) — keeps the
+    # prompt tight and avoids the model echoing comment scaffolding.
+    glossary = ", ".join(cfg.glossary_terms()) or "(none provided)"
     user_prompt = MINUTES_TEMPLATE.format(
         date=date or "[not stated]",
         speakers=_speakers_in(transcript),
@@ -106,4 +122,5 @@ def summarize(transcript: str, cfg, date: str = "") -> str:
             f"And is the model pulled?  ollama pull {cfg.summary_model}"
         )
 
-    return (data.get("message") or {}).get("content", "").strip()
+    content = (data.get("message") or {}).get("content", "").strip()
+    return _strip_echoed_reference(content)

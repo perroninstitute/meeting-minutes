@@ -39,7 +39,16 @@ paste the prompt below to continue.
 
 ---
 
-## Quick reference (also in README.md)
+## Status: set up & verified (2026-06-01)
+
+Initial Windows setup is done and the full pipeline was verified end-to-end on a
+GPU test bench (record → mix → WhisperX transcribe+diarize → Ollama minutes).
+A few fixes were needed along the way (CPU-torch trap, a recorder threading bug,
+the whisperx diarization API change, the community-1 license, UTF-8 mode, FFmpeg,
+and disabling pyannote telemetry) — all folded into the code and **README.md**.
+Use the README as the source of truth; the quick reference below is updated.
+
+## Quick reference (full details in README.md)
 
 ```powershell
 git clone <this-repo-url>
@@ -48,13 +57,24 @@ python -m venv venv
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
+# NVIDIA GPU only: re-install the CUDA build of torch AFTER the line above
+# (WhisperX pulls a CPU-only torch that overrides it):
+pip install --force-reinstall --no-deps torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0 `
+  --index-url https://download.pytorch.org/whl/cu128
+
 # Ollama: install from https://ollama.com/download, then:
 ollama pull qwen2.5:7b
-setx MM_SUMMARY_MODEL "qwen2.5:7b"
 
-# Speaker labels: free HF token (see README step 4), then:
+# Apply the machine preset (sets MM_*, PYTHONUTF8, telemetry off):
+.\presets\workstation-gpu.ps1     # GPU box
+# .\presets\laptop-cpu.ps1        # CPU-only laptop
+
+# Speaker labels: accept https://huggingface.co/pyannote/speaker-diarization-community-1
+# then set a free HF read token:
 setx MM_HF_TOKEN "hf_xxxxxxxxxxxx"
 
-# Run it:
-python main.py run
+# Also install a SHARED FFmpeg build and add its bin\ to PATH (see README).
+
+# Run it (record 10 min then summarise, or omit -d to stop with Enter):
+python main.py run -d 600
 ```

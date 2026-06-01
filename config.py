@@ -9,6 +9,18 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# --- Privacy: kill pyannote.audio's phone-home telemetry BEFORE it is imported.
+# pyannote.audio 4.x ships with metrics ENABLED by default, POSTing usage
+# metadata (file duration, speaker count, a session UUID, library version) to
+# https://otel.pyannote.ai on every diarization. No audio/transcript content is
+# sent, but for a fully-local clinical tool no outbound call is acceptable.
+# config.py is imported before anything pulls in whisperx/pyannote, so setting
+# this here disables it. setdefault => the user can still opt in by exporting
+# PYANNOTE_METRICS_ENABLED=true themselves.
+os.environ.setdefault("PYANNOTE_METRICS_ENABLED", "false")
+# Belt-and-suspenders: disable the OpenTelemetry SDK globally too.
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.getenv("MM_DATA_DIR", BASE_DIR / "recordings"))
 OUTPUT_DIR = Path(os.getenv("MM_OUTPUT_DIR", BASE_DIR / "minutes"))
@@ -51,6 +63,13 @@ class Config:
     # pyannote/segmentation-3.0, then put your token here or in MM_HF_TOKEN.
     # Without it the tool still works — it just won't label speakers.
     hf_token: str | None = os.getenv("MM_HF_TOKEN") or None
+    # Which pyannote pipeline to use. whisperx 3.8 + pyannote.audio 4.x require
+    # "speaker-diarization-community-1" (even loading the older "3.1" pipeline
+    # pulls a community-1 asset under pyannote 4.x). Accept its terms at
+    # https://hf.co/pyannote/speaker-diarization-community-1. Override if needed.
+    diarize_model: str = os.getenv(
+        "MM_DIARIZE_MODEL", "pyannote/speaker-diarization-community-1"
+    )
     min_speakers: int | None = (
         int(os.environ["MM_MIN_SPEAKERS"]) if os.getenv("MM_MIN_SPEAKERS") else None
     )

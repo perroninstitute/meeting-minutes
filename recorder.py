@@ -39,7 +39,9 @@ class _StreamRecorder(threading.Thread):
         self._sr = sample_rate
         self.label = label
         self._frames: list[np.ndarray] = []
-        self._stop = threading.Event()
+        # NB: must NOT be named `_stop` — that shadows threading.Thread._stop,
+        # which join() calls internally, raising "'Event' object is not callable".
+        self._stop_event = threading.Event()
         self.error: Exception | None = None
 
     def run(self) -> None:
@@ -47,14 +49,14 @@ class _StreamRecorder(threading.Thread):
             # numframes=None → return whatever is available each loop; keeps
             # latency low and avoids blocking on a fixed block size.
             with self._mic.recorder(samplerate=self._sr, channels=1) as rec:
-                while not self._stop.is_set():
+                while not self._stop_event.is_set():
                     data = rec.record(numframes=self._sr // 10)  # ~100ms chunks
                     self._frames.append(data.copy())
         except Exception as e:  # surface device errors to the caller
             self.error = e
 
     def stop(self) -> np.ndarray:
-        self._stop.set()
+        self._stop_event.set()
         self.join(timeout=5)
         if not self._frames:
             return np.zeros((0, 1), dtype=np.float32)
