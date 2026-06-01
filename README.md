@@ -1,5 +1,9 @@
 # Local Meeting Minutes
 
+> 👋 **New to this or not very technical? Read [START_HERE.md](START_HERE.md)
+> instead** — a plain-language, step-by-step setup guide that explains what each
+> step does and why. This README is the shorter technical reference.
+
 Record a meeting you're attending, transcribe it with speaker labels, and turn
 it into structured clinical minutes — **100% on your own machine**. No audio,
 transcript, or summary ever leaves the computer. Built for sensitive
