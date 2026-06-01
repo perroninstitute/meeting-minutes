@@ -1,0 +1,232 @@
+# Domain glossary — neurology, neuroscience, biochemistry, clinical research.
+#
+# Two jobs:
+#   1. Seeds Whisper's "initial prompt" so it spells rare terms correctly
+#      instead of guessing phonetically (e.g. "oligodendrocyte", not
+#      "oligo den drosight").
+#   2. Given to the summary model so it uses correct terminology and doesn't
+#      "simplify" clinical language.
+#
+# One term per line. Lines starting with "#" are ignored. This is a broad
+# starter library — ADD the institute's own drug names, study/protocol codes,
+# local abbreviations, equipment, and staff names/titles for best results.
+# (Whisper only uses the first ~224 tokens of the prompt, so if this gets very
+# long, keep the terms most specific to YOUR meetings near the top.)
+
+# ===================== Neurological conditions =====================
+epilepsy
+status epilepticus
+multiple sclerosis
+Parkinson's disease
+Alzheimer's disease
+amyotrophic lateral sclerosis (ALS)
+Huntington's disease
+myasthenia gravis
+Guillain-Barré syndrome
+ischaemic stroke
+haemorrhagic stroke
+transient ischaemic attack (TIA)
+subarachnoid haemorrhage
+subdural haematoma
+glioblastoma
+meningioma
+migraine
+trigeminal neuralgia
+peripheral neuropathy
+dementia with Lewy bodies
+frontotemporal dementia
+encephalitis
+meningitis
+hydrocephalus
+cerebral palsy
+dystonia
+essential tremor
+narcolepsy
+neuromyelitis optica
+
+# ===================== Symptoms & signs =====================
+aphasia
+dysarthria
+dysphagia
+ataxia
+hemiparesis
+paraesthesia
+nystagmus
+spasticity
+hyperreflexia
+bradykinesia
+akinesia
+fasciculation
+ptosis
+diplopia
+seizure
+aura
+syncope
+
+# ===================== Neuroanatomy =====================
+cerebral cortex
+frontal lobe
+parietal lobe
+temporal lobe
+occipital lobe
+hippocampus
+amygdala
+thalamus
+hypothalamus
+cerebellum
+brainstem
+midbrain
+pons
+medulla oblongata
+basal ganglia
+substantia nigra
+striatum
+corpus callosum
+internal capsule
+blood-brain barrier
+ventricles
+meninges
+dura mater
+white matter
+grey matter
+
+# ===================== Cellular & molecular neuroscience =====================
+neuron
+axon
+dendrite
+synapse
+myelin
+oligodendrocyte
+astrocyte
+microglia
+Schwann cell
+node of Ranvier
+action potential
+depolarisation
+repolarisation
+neurotransmitter
+synaptic vesicle
+receptor
+ion channel
+neuroplasticity
+long-term potentiation
+neurogenesis
+apoptosis
+excitotoxicity
+neuroinflammation
+
+# ===================== Neurotransmitters & receptors =====================
+glutamate
+GABA (gamma-aminobutyric acid)
+dopamine
+serotonin
+acetylcholine
+noradrenaline
+adrenaline
+NMDA receptor
+AMPA receptor
+GABA-A receptor
+nicotinic receptor
+muscarinic receptor
+reuptake transporter
+
+# ===================== Biochemistry & metabolism =====================
+adenosine triphosphate (ATP)
+mitochondria
+oxidative phosphorylation
+glycolysis
+Krebs cycle
+enzyme
+substrate
+catalysis
+phosphorylation
+amino acid
+peptide
+protein folding
+lipid bilayer
+cholesterol
+oxidative stress
+reactive oxygen species
+homeostasis
+metabolite
+cofactor
+
+# ===================== Molecular biology & genetics =====================
+deoxyribonucleic acid (DNA)
+ribonucleic acid (RNA)
+messenger RNA (mRNA)
+transcription
+translation
+gene expression
+mutation
+allele
+genotype
+phenotype
+chromosome
+genome
+polymerase chain reaction (PCR)
+CRISPR
+biomarker
+epigenetics
+
+# ===================== Immunology / neuroimmunology =====================
+antibody
+antigen
+cytokine
+T cell
+B cell
+autoimmune
+inflammation
+complement system
+demyelination
+oligoclonal bands
+
+# ===================== Pharmacology =====================
+pharmacokinetics
+pharmacodynamics
+agonist
+antagonist
+half-life
+dose titration
+disease-modifying therapy
+levodopa
+contraindication
+adverse drug reaction
+blood-brain barrier penetration
+
+# ===================== Investigations & techniques =====================
+electroencephalogram (EEG)
+electromyography (EMG)
+magnetic resonance imaging (MRI)
+functional MRI (fMRI)
+computed tomography (CT)
+positron emission tomography (PET)
+diffusion tensor imaging (DTI)
+lumbar puncture
+cerebrospinal fluid (CSF)
+nerve conduction study
+evoked potentials
+immunohistochemistry
+Western blot
+flow cytometry
+mass spectrometry
+
+# ===================== Clinical & research general =====================
+differential diagnosis
+prognosis
+aetiology
+pathophysiology
+comorbidity
+informed consent
+randomised controlled trial
+placebo
+double-blind
+cohort study
+statistical significance
+p-value
+confidence interval
+multidisciplinary team (MDT)
+adverse event
+case report form
+ethics committee
+institutional review board (IRB)

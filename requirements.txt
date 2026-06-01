@@ -1,0 +1,11 @@
+# Audio capture (Windows WASAPI loopback + mic) and WAV I/O
+soundcard
+soundfile
+numpy
+
+# Transcription + alignment + speaker diarization (pulls in torch,
+# faster-whisper, and pyannote.audio as dependencies).
+whisperx
+
+# Summarisation talks to a local Ollama server over plain HTTP, so it uses
+# only the Python standard library — nothing extra needed here.

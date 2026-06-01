@@ -1,0 +1,25 @@
+# --- Sensitive data: NEVER commit recordings, transcripts, or minutes ---
+recordings/
+minutes/
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.transcript.txt
+*.minutes.md
+
+# --- Secrets ---
+.env
+*.token
+
+# --- Python ---
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/

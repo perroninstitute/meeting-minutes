@@ -1,0 +1,136 @@
+# Local Meeting Minutes
+
+Record a meeting you're attending, transcribe it with speaker labels, and turn
+it into structured clinical minutes — **100% on your own machine**. No audio,
+transcript, or summary ever leaves the computer. Built for sensitive
+(e.g. clinical / neurological) meetings where cloud services are not allowed.
+
+```
+record (mic + system audio)  →  WhisperX (transcribe + speaker labels)
+                              →  local LLM via Ollama  →  minutes.md
+```
+
+---
+
+## ⚠️ Consent & compliance — read first
+
+This tool **records meetings**. Before using it for real:
+
+- **Get participant consent.** Recording clinical/work meetings without the
+  participants' knowledge is often illegal and against institutional policy.
+  Announce that the meeting is being recorded.
+- **Clear it with your institute's IT / data-protection officer.** A
+  fully-local tool is the easiest kind to approve, but approval should still
+  be obtained — especially on a work-issued machine.
+- **Test with dummy audio**, never a real patient meeting, until it's running
+  fully locally and verified.
+- **Protect the files.** `recordings/` and `minutes/` contain sensitive data.
+  Keep them on an encrypted disk (BitLocker / FileVault) and **out of any
+  cloud-synced folder** (OneDrive, Dropbox, iCloud).
+
+The tool is local by design, but *you* are responsible for how recordings are
+captured, stored, and shared.
+
+---
+
+## What runs where
+
+| Step | Tech | Local? |
+|---|---|---|
+| Capture system audio + mic | `soundcard` (WASAPI loopback on Windows) | ✅ |
+| Transcribe + word timing | WhisperX / faster-whisper | ✅ (one-time model download) |
+| Speaker labels (diarization) | pyannote via WhisperX | ✅ (one-time model download) |
+| Summarize → minutes | local LLM via **Ollama** | ✅ |
+
+---
+
+## Setup (Windows work machine)
+
+1. **Install Python 3.11+** (from python.org; tick "Add to PATH").
+
+2. **Install Ollama** and pull a summary model:
+   ```powershell
+   # download Ollama from https://ollama.com/download then:
+   ollama pull qwen2.5:7b      # good general model for summaries
+   ```
+
+3. **Install the Python dependencies:**
+   ```powershell
+   cd meeting-minutes
+   python -m venv venv
+   venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   # PyTorch: if you have an NVIDIA GPU, install the CUDA build from
+   # https://pytorch.org for much faster transcription. CPU works too.
+   ```
+
+4. **Enable speaker labels (one-time):**
+   - Make a free account at https://huggingface.co
+   - Accept the terms on both:
+     - https://huggingface.co/pyannote/speaker-diarization-3.1
+     - https://huggingface.co/pyannote/segmentation-3.0
+   - Create a token at https://huggingface.co/settings/tokens
+   - Set it (PowerShell):
+     ```powershell
+     setx MM_HF_TOKEN "hf_xxxxxxxxxxxxxxxxx"
+     ```
+   (Skip this and the tool still works — it just won't separate speakers.)
+
+5. **Point it at your summary model:**
+   ```powershell
+   setx MM_SUMMARY_MODEL "qwen2.5:7b"
+   ```
+
+6. **Fill in `glossary.txt`** with the institute's real terms, drug names,
+   abbreviations, and staff names. This improves both transcription accuracy
+   and summary quality.
+
+---
+
+## Usage
+
+```powershell
+# Full flow: record now, stop with Enter, get minutes automatically
+python main.py run
+
+# Or in two steps:
+python main.py record                 # → recordings/meeting-<timestamp>.wav
+python main.py process recordings/meeting-<timestamp>.wav
+
+# Re-summarize an existing recording or transcribe a file from elsewhere:
+python main.py process some-meeting.mp3 -o minutes/today.md
+```
+
+Output lands in `minutes/`:
+- `*.transcript.txt` — full speaker-labelled transcript
+- `*.minutes.md` — the structured minutes
+
+---
+
+## Configuration (environment variables)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `MM_WHISPER_MODEL` | `large-v3` | `medium`/`small` are faster & lighter |
+| `MM_LANGUAGE` | auto | pin to `en` or `de` if known |
+| `MM_DEVICE` | `cpu` | set `cuda` with an NVIDIA GPU |
+| `MM_COMPUTE_TYPE` | `int8` | `float16` on GPU |
+| `MM_SUMMARY_MODEL` | `qwen2.5-coder:3b` | any Ollama model |
+| `MM_HF_TOKEN` | — | enables speaker labels |
+| `MM_MIN_SPEAKERS` / `MM_MAX_SPEAKERS` | — | hint the diarizer |
+| `MM_CAPTURE_MIC` / `MM_CAPTURE_SYSTEM` | `true` | toggle each source |
+
+---
+
+## Notes & limitations
+
+- **Capture model:** you attend the call normally; the tool records what your
+  speakers play (other participants) plus your mic (you). It does **not** join
+  the meeting as a bot — that's intentional (simpler, more private, no Azure).
+- **First run is slow:** Whisper and pyannote models download once (a few GB),
+  then are cached.
+- **RAM:** `large-v3` + a 7B summary model is heavy. If the machine struggles,
+  drop to `MM_WHISPER_MODEL=medium` and a smaller summary model.
+- **Accuracy:** clinical terms transcribe far better once `glossary.txt`
+  reflects the real vocabulary. Always have a human check the minutes before
+  they're treated as a record.
