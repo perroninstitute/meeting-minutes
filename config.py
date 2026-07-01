@@ -82,7 +82,7 @@ class Config:
     # Summarising a transcript is an easy task — a general 7B model does it
     # well. On the 8GB prototype Mac only qwen2.5-coder:3b is installed, so
     # that's the fallback default; override on the work machine.
-    summary_model: str = os.getenv("MM_SUMMARY_MODEL", "qwen2.5-coder:3b")
+    summary_model: str = os.getenv("MM_SUMMARY_MODEL", "qwen2.5:7b")
 
     glossary_path: Path = field(
         default_factory=lambda: Path(os.getenv("MM_GLOSSARY", BASE_DIR / "glossary.txt"))

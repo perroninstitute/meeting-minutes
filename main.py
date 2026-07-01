@@ -4,6 +4,7 @@ Subcommands:
   record               Record a meeting (mic + system audio) to a WAV.
   process <audio>      Transcribe + diarize + summarize an existing WAV/MP3.
   run                  Record now, then process it when you stop. (Full flow.)
+  summarise            Summarise an existing transcription.
 
 Everything runs locally. See README.md for setup and the consent notice.
 """
@@ -64,7 +65,19 @@ def _process(audio: Path, cfg, out: Path | None) -> Path:
     out.write_text(minutes, encoding="utf-8")
     print(f"  ✓ Minutes → {out}")
     return out
+  
+def _summarise(transcript_path: Path, cfg, out: Path | None):
+    import summarizer
+    
+    transcript = transcript_path.read_text(encoding="utf-8")
+    print(f"[1/2] Summarizing with '{cfg.summary_model}' …")
+    minutes = summarizer.summarize(transcript, cfg, date=time.strftime("%Y-%m-%d"))
 
+    print("[2/2] Writing minutes …")
+    out = out or (config.OUTPUT_DIR / (transcript_path.stem + ".minutes.md"))
+    out.write_text(minutes, encoding="utf-8")
+    print(f"  ✓ Minutes → {out}")
+    return out
 
 def cmd_record(args, cfg) -> None:
     import recorder
@@ -85,6 +98,13 @@ def cmd_process(args, cfg) -> None:
         print(f"File not found: {audio}")
         sys.exit(1)
     _process(audio, cfg, Path(args.output) if args.output else None)
+    
+def cmd_summarise(args, cfg) -> None:
+    transcript = Path(args.transcript)
+    if not transcript.exists():
+        print(f"File not found: {transcript}")
+        sys.exit(1)
+    _summarise(transcript, cfg, Path(args.output) if args.output else None)
 
 
 def cmd_run(args, cfg) -> None:
@@ -130,6 +150,10 @@ def main() -> None:
              "(default: record until you press Enter).",
     )
     p_run.set_defaults(func=cmd_run)
+    p_sum = sub.add_parser("summarise", help="Summarise an existing transcript")
+    p_sum.add_argument("transcript", help="Path to .transcript.txt file")
+    p_sum.add_argument("-o", "--output", help="Output minutes .md path")
+    p_sum.set_defaults(func=cmd_summarise)
 
     args = parser.parse_args()
     args.func(args, cfg)
