@@ -58,7 +58,7 @@ def _process(audio: Path, cfg, out: Path | None) -> Path:
     print(f"  ✓ Transcript → {transcript_path}")
 
     print(f"[2/3] Summarizing with '{cfg.summary_model}' …")
-    minutes = summarizer.summarize(transcript, cfg, date=time.strftime("%Y-%m-%d"))
+    minutes = summarizer.summarize(transcript, cfg, date=time.strftime("%d/%m/%Y"))
 
     print("[3/3] Writing minutes …")
     out = out or (config.OUTPUT_DIR / (audio.stem + ".minutes.md"))
@@ -71,7 +71,7 @@ def _summarise(transcript_path: Path, cfg, out: Path | None):
     
     transcript = transcript_path.read_text(encoding="utf-8")
     print(f"[1/2] Summarizing with '{cfg.summary_model}' …")
-    minutes = summarizer.summarize(transcript, cfg, date=time.strftime("%Y-%m-%d"))
+    minutes = summarizer.summarize(transcript, cfg, date=time.strftime("%d/%m/%Y"))
 
     print("[2/2] Writing minutes …")
     out = out or (config.OUTPUT_DIR / (transcript_path.stem + ".minutes.md"))

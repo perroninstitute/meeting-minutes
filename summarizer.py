@@ -1,4 +1,4 @@
-"""Turn a speaker-labelled transcript into clinical meeting minutes.
+"""Turn a speaker-labelled transcript into RSST meeting minutes.
 
 Runs entirely against a local Ollama server — the transcript never leaves the
 machine. The model is given the domain glossary so it keeps clinical terms
@@ -12,46 +12,47 @@ import urllib.request
 
 
 SYSTEM_PROMPT = """You are a precise clinical meeting-minutes assistant for a \
-neurological institute. You transform raw, speaker-labelled meeting transcripts \
-into structured minutes.
-
-The minutes should be as detailed as possible, and written in full sentences in\
-a bullet point format. Use as many bullet points as necessary to capture all \
-relevant information. 
+neurological institute. You turn raw, speaker-labelled meeting transcripts into \
+a clean, logically organised list of minutes and actions.
 
 Rules:
 - Be factual. Only state what is supported by the transcript. Never invent \
 names, numbers, dates, dosages, or decisions.
 - Preserve clinical terminology exactly. Do not simplify or paraphrase medical \
 terms, drug names, or abbreviations.
-- Attribute decisions and action items to the speaker who made them when the \
+- Attribute decisions and actions to the person who made them when the \
 transcript makes it clear.
 - If something is unclear or inaudible, write "[unclear]" rather than guessing.
 - Keep patient-identifying detail to the minimum needed for the minutes to be \
-useful."""
+useful.
+- Write in full, readable sentences. Organise by topic, not by the chronology \
+of the conversation — merge scattered mentions of the same topic into one \
+point."""
 
 
-MINUTES_TEMPLATE = """Produce the minutes in this exact Markdown structure:
+MINUTES_TEMPLATE = """Produce the minutes as a clean numbered list of discussion \
+points, with any agreed tasks called out as ACTION lines. Use this exact \
+Markdown structure:
 
-# Meeting Minutes
+# RSST Meeting Minutes — {date}
 
-**Date:** {date}
-**Attendees (speakers detected):** {speakers}
+1. First discussion point, in full sentences — what was discussed, noted, or decided.
+   a. A supporting detail, consideration, or who-said-what, if there is one.
+   b. Another supporting detail, if there is one.
+2. The next discussion point.
 
-## Summary
-A short paragraph (3-5 sentences) capturing the purpose and overall outcome.
+**ACTION:** <responsible person> to <do what>.
 
-## Key Discussion Points
-- Bullet points of the main topics discussed, grouped logically.
-
-## Decisions
-- Each decision made, with the responsible person if known.
-
-## Action Items
-- [ ] Action — Owner — Due/Timeframe (use "[unclear]" where not stated)
-
-## Open Questions / Follow-ups
-- Anything left unresolved.
+Rules for the structure:
+- Number the main discussion points (1., 2., 3. …), ordered logically by topic.
+- Use lettered sub-items (a., b., c.) ONLY where a point has supporting detail \
+worth separating out. If a point has no sub-detail, do not force any.
+- Whenever a task or follow-up is agreed, put it on its OWN line immediately \
+after the point it relates to, formatted exactly as: **ACTION:** <who> to \
+<task>. One action per line. If the owner is not clear from the transcript, \
+write "**ACTION:** [owner unclear] — <task>".
+- Do NOT add Summary, Attendees, Decisions, or Open Questions sections. Only the \
+numbered points and their ACTION lines.
 
 ---
 Use this domain terminology with the spellings below wherever it appears. Do
