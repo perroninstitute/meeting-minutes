@@ -85,8 +85,16 @@ def _strip_echoed_reference(minutes: str) -> str:
     occurrence of one marks where the model started parroting the prompt."""
     markers = ("\nUse this domain terminology", "\nTranscript to summarise",
                "\nRelevant domain terminology", "\nTranscript:")
-    cut = min((minutes.find(m) for m in markers if m in minutes), default=-1)
-    return minutes[:cut].rstrip() if cut != -1 else minutes
+    positions = [minutes.find(m) for m in markers if m in minutes]
+    if not positions:
+        return minutes
+    cut = min(positions)
+    # Don't over-strip: a marker right at the very top means the model parroted
+    # the prompt instead of writing minutes. Keep the raw text so the caller can
+    # see what happened rather than silently returning almost nothing.
+    if cut < 20:
+        return minutes
+    return minutes[:cut].rstrip()
 
 
 def summarize(transcript: str, cfg, date: str = "") -> str:
@@ -128,4 +136,21 @@ def summarize(transcript: str, cfg, date: str = "") -> str:
         )
 
     content = (data.get("message") or {}).get("content", "").strip()
-    return _strip_echoed_reference(content)
+    cleaned = _strip_echoed_reference(content)
+
+    # A healthy set of minutes is never this short. If it is, the generation
+    # failed — surface WHAT the model returned instead of writing junk to disk.
+    if len(cleaned.strip()) < 15:
+        preview = (content[:500] + "…") if len(content) > 500 else (content or "(empty)")
+        raise RuntimeError(
+            "The summary model returned almost nothing usable.\n"
+            f"  Model actually returned: {preview!r}\n\n"
+            "This is a generation failure, not a formatting problem. Usual causes:\n"
+            "  - the transcript file was empty or unreadable — open it and check "
+            "there is real text in it;\n"
+            f"  - the model '{cfg.summary_model}' is misbehaving — test it with:  "
+            f"ollama run {cfg.summary_model} \"say hello\"\n"
+            "  - Ollama ran out of memory on a long transcript — try a shorter "
+            "transcript or a smaller model."
+        )
+    return cleaned
